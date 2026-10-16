@@ -50,22 +50,38 @@ Future<void> main() async {
     (
       id: 'portfolio-demo-01',
       title: 'Product launch plan',
-      content: '# Launch checklist\n- [x] Define MVP\n- [x] Polish onboarding\n- [ ] Test the beta release\n\n**Goal:** Make every note available offline.',
+      content: '# Launch checklist\n'
+          '- [x] Define MVP\n'
+          '- [x] Polish onboarding\n'
+          '- [ ] Test the beta release\n\n'
+          '**Goal:** Make every note available offline.',
     ),
     (
       id: 'portfolio-demo-02',
       title: 'Sprint tasks',
-      content: '## This week\n- [x] Review sync retries\n- [ ] Refine mobile cards\n- [ ] Prepare release notes\n\nPrioritize reliability.',
+      content: '## This week\n'
+          '- [x] Review sync retries\n'
+          '- [ ] Refine mobile cards\n'
+          '- [ ] Prepare release notes\n\n'
+          'Prioritize reliability.',
     ),
     (
       id: 'portfolio-demo-03',
       title: 'Research notes',
-      content: '### Offline-first design\nWrite locally first, then synchronize when a connection returns.\n\n- Durable local cache\n- Background retry queue\n- Clear sync status',
+      content: '### Offline-first design\n'
+          'Write locally first, then synchronize when a connection returns.\n\n'
+          '- Durable local cache\n'
+          '- Background retry queue\n'
+          '- Clear sync status',
     ),
     (
       id: 'portfolio-demo-04',
       title: 'Ideas and inspiration',
-      content: 'Keep the interface calm and focused.\n\n**Design themes**\n- Readable typography\n- Flexible workspaces\n- Useful connections',
+      content: 'Keep the interface calm and focused.\n\n'
+          '**Design themes**\n'
+          '- Readable typography\n'
+          '- Flexible workspaces\n'
+          '- Useful connections',
     ),
   ];
 
