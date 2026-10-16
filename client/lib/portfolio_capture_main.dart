@@ -50,38 +50,50 @@ Future<void> main() async {
     (
       id: 'portfolio-demo-01',
       title: 'Product launch plan',
-      content: '# Launch checklist\n'
-          '- [x] Define MVP\n'
-          '- [x] Polish onboarding\n'
-          '- [ ] Test the beta release\n\n'
-          '**Goal:** Make every note available offline.',
+      content: [
+        '# Launch checklist',
+        '- [x] Define MVP',
+        '- [x] Polish onboarding',
+        '- [ ] Test the beta release',
+        '',
+        '**Goal:** Make every note available offline.',
+      ].join('\n'),
     ),
     (
       id: 'portfolio-demo-02',
       title: 'Sprint tasks',
-      content: '## This week\n'
-          '- [x] Review sync retries\n'
-          '- [ ] Refine mobile cards\n'
-          '- [ ] Prepare release notes\n\n'
-          'Prioritize reliability.',
+      content: [
+        '## This week',
+        '- [x] Review sync retries',
+        '- [ ] Refine mobile cards',
+        '- [ ] Prepare release notes',
+        '',
+        'Prioritize reliability.',
+      ].join('\n'),
     ),
     (
       id: 'portfolio-demo-03',
       title: 'Research notes',
-      content: '### Offline-first design\n'
-          'Write locally first, then synchronize when a connection returns.\n\n'
-          '- Durable local cache\n'
-          '- Background retry queue\n'
-          '- Clear sync status',
+      content: [
+        '### Offline-first design',
+        'Write locally first, then synchronize when a connection returns.',
+        '',
+        '- Durable local cache',
+        '- Background retry queue',
+        '- Clear sync status',
+      ].join('\n'),
     ),
     (
       id: 'portfolio-demo-04',
       title: 'Ideas and inspiration',
-      content: 'Keep the interface calm and focused.\n\n'
-          '**Design themes**\n'
-          '- Readable typography\n'
-          '- Flexible workspaces\n'
-          '- Useful connections',
+      content: [
+        'Keep the interface calm and focused.',
+        '',
+        '**Design themes**',
+        '- Readable typography',
+        '- Flexible workspaces',
+        '- Useful connections',
+      ].join('\n'),
     ),
   ];
 
