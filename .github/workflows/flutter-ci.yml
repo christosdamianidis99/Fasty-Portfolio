@@ -38,7 +38,8 @@ jobs:
           $scripts = @(
             'scripts/capture_portfolio_windows.ps1',
             'scripts/resume_portfolio_capture_windows.ps1',
-            'scripts/resume_portfolio_capture_wireless_windows.ps1'
+            'scripts/resume_portfolio_capture_wireless_windows.ps1',
+            'scripts/resume_portfolio_capture_direct_windows.ps1'
           )
           foreach ($file in $scripts) {
             $tokens = $null
