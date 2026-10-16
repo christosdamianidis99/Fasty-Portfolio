@@ -168,6 +168,20 @@ public static class FastyScreenshotWin32 {
                 & $adb -s $serial shell am start -n "$demoPackage/com.christosdamianidis.fasty.MainActivity"
             }
             Start-Sleep -Seconds 7
+            # Refuse to capture the lock screen, launcher, or any other app.
+            $demoInForeground = $false
+            for ($attempt = 0; $attempt -lt 15; $attempt++) {
+                $focus = @(& $adb -s $serial shell dumpsys window |
+                    Where-Object { $_ -match "mCurrentFocus=" })
+                if (($focus -join " ").Contains($demoPackage)) {
+                    $demoInForeground = $true
+                    break
+                }
+                Start-Sleep -Seconds 1
+            }
+            if (-not $demoInForeground) {
+                throw "Demo app not in foreground. Unlock the phone and retry; no Android screenshot was uploaded."
+            }
             $remoteScreenshot = "/sdcard/Download/fasty-portfolio-demo.png"
             try {
                 Invoke-Checked "Capture Android screenshot: $View" {
