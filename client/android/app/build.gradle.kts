@@ -45,6 +45,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Only this screenshot-tooling branch adds a separate app ID.
+            // It cannot replace or access the normal Fasty Android app.
+            applicationIdSuffix = ".portfoliodemo"
+        }
         release {
             signingConfig = if (hasReleaseSigning) {
                 signingConfigs.getByName("release")
