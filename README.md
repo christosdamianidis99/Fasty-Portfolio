@@ -6,6 +6,27 @@ Fasty is a full-stack engineering portfolio project exploring durable offline ed
 
 > **Status:** Source-available engineering portfolio. This is not a hosted service, security-certified product, or production-ready deployment. Android, Windows, and web compile smoke tests and 226 Flutter / 164 backend automated tests passed on the reviewed source snapshot; native multi-device acceptance remains incomplete.
 
+## Screenshots
+
+Real screenshots of the Fasty Flutter interface, captured on Windows and Android with **isolated, in-memory example notes**. These images demonstrate the UI without exposing a personal account or production data; they are not evidence of a hosted service.
+
+### Windows — visual workspace
+
+<img src="docs/screenshots/windows-workspace.png" alt="Fasty Windows desktop visual workspace with example notes and connections" width="900">
+
+### Android — workspace and Markdown editor
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/android-workspace.png" alt="Fasty Android workspace showing demo notes" width="300"></td>
+    <td align="center"><img src="docs/screenshots/android-note-editor.png" alt="Fasty Android Markdown note editor showing demo checklist content" width="300"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Workspace</strong></td>
+    <td align="center"><strong>Note editor</strong></td>
+  </tr>
+</table>
+
 ## What it demonstrates
 
 - **Local-first storage:** notes are stored in a local SQLite database using Drift and remain editable without a network connection.
