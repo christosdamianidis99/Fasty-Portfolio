@@ -1,0 +1,222 @@
+name: Fasty CI
+
+on:
+  push:
+    branches:
+      - main
+      - feat/**
+  pull_request:
+    paths:
+      - 'client/**'
+      - 'backend/**'
+      - 'infrastructure/**'
+      - '.github/workflows/flutter-ci.yml'
+      - 'scripts/check_public_snapshot.py'
+      - 'docs/**'
+      - 'README.md'
+      - 'LICENSE'
+      - 'SECURITY.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fasty-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publication-safety:
+    name: Tracked-file publication safety screen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Scan tracked files without exposing matched contents
+        run: python3 scripts/check_public_snapshot.py
+
+  flutter-quality:
+    name: Flutter quality and synchronization tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Format sources for validation
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
+
+      - name: Analyze
+        shell: bash
+        run: |
+          set -o pipefail
+          flutter analyze 2>&1 | tee analyze-output.txt
+
+      - name: Run tests
+        shell: bash
+        run: |
+          set -o pipefail
+          flutter test --reporter expanded 2>&1 | tee test-output.txt
+
+      - name: Upload Flutter diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-ci-output
+          path: |
+            client/analyze-output.txt
+            client/test-output.txt
+          if-no-files-found: ignore
+
+  android-build:
+    name: Android compile smoke test
+    needs: flutter-quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build debug APK
+        run: >-
+          flutter build apk --debug
+          --dart-define=FASTY_API_BASE_URL=http://127.0.0.1:8080
+
+  web-build:
+    name: Web compile smoke test
+    needs: flutter-quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web bundle
+        run: >-
+          flutter build web --release
+          --dart-define=FASTY_API_BASE_URL=http://127.0.0.1:8080
+
+  windows-build:
+    name: Windows compile smoke test
+    needs: flutter-quality
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows application
+        run: >-
+          flutter build windows --debug
+          --dart-define=FASTY_API_BASE_URL=http://127.0.0.1:8080
+
+  backend:
+    name: Backend build and PostgreSQL integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18.1
+        env:
+          POSTGRES_DB: fasty_tests
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fasty_tests"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      FASTY_TEST_DATABASE: Host=127.0.0.1;Port=5432;Database=fasty_tests;Username=postgres;Password=postgres
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore tests and API
+        run: dotnet restore tests/Fasty.Api.Tests/Fasty.Api.Tests.csproj
+
+      - name: Build tests and API
+        run: >-
+          dotnet build tests/Fasty.Api.Tests/Fasty.Api.Tests.csproj
+          --configuration Release
+          --no-restore
+
+      - name: Run backend tests
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet test tests/Fasty.Api.Tests/Fasty.Api.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "console;verbosity=normal" 2>&1 | tee backend-test-output.txt
+
+      - name: Upload backend diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-output
+          path: backend/backend-test-output.txt
+          if-no-files-found: ignore

@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Local Android development can use the HTTP emulator API.
+         Release builds inherit the main manifest's cleartext prohibition. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:usesCleartextTraffic="true"
+        tools:replace="android:usesCleartextTraffic" />
+</manifest>

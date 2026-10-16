@@ -1,0 +1,61 @@
+name: fasty
+version: 0.2.1+6
+publish_to: none
+description: Local-first cross-platform notes client.
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dependencies:
+  app_links: ^6.4.1
+  crypto: ^3.0.7
+  drift: ^2.34.2
+  drift_flutter: ^0.3.1
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_markdown_plus: ^1.0.12
+  flutter_secure_storage: ^10.3.1
+  google_sign_in: ^7.2.0
+  http: ^1.6.0
+  shared_preferences: ^2.5.5
+  url_launcher: ^6.3.2
+  uuid: ^4.6.0
+
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+  drift_dev: ^2.34.5
+  build_runner: ^2.15.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/branding/fasty_logo.png
+    - assets/branding/fasty_splash.png
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/branding/fasty_app_icon.png
+  min_sdk_android: 21
+  windows:
+    generate: true
+    image_path: assets/branding/fasty_app_icon.png
+    icon_size: 256
+
+flutter_native_splash:
+  color: "#0877F9"
+  image: assets/branding/fasty_logo.png
+  android: true
+  ios: false
+  web: false
+  android_12:
+    color: "#0877F9"
+    image: assets/branding/fasty_logo.png

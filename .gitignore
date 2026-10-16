@@ -1,0 +1,27 @@
+# IDE files
+.idea/
+.vscode/
+
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# Flutter and Android build artifacts
+client/.dart_tool/
+client/build/
+client/android/.gradle/
+client/android/build/
+dist/
+
+# Local environment and secrets
+.env
+**/.env
+**/.env.backup-*
+!.env.example
+!**/.env.example
+client/android/key.properties
+client/android/*.jks
+client/android/*.keystore
+
+# Local Docker Compose demo data
+infrastructure/data/

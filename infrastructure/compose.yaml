@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:18.1
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fasty
+      POSTGRES_USER: fasty
+      POSTGRES_PASSWORD: ${FASTY_DB_PASSWORD:?Set a unique FASTY_DB_PASSWORD in .env}
+    volumes:
+      - fasty_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fasty -d fasty"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ../backend/src/Fasty.Api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "http://+:8080;http://+:8081"
+      Monitoring__Enabled: ${FASTY_MONITORING_ENABLED:-false}
+      Monitoring__RequestCapacity: ${FASTY_MONITORING_REQUEST_CAPACITY:-10000}
+      Monitoring__ActionCapacity: ${FASTY_MONITORING_ACTION_CAPACITY:-10000}
+      Monitoring__AnonymizationKey: ${FASTY_MONITORING_ANONYMIZATION_KEY:-}
+      Monitoring__SnapshotImportFile: "${FASTY_ANALYTICS_SNAPSHOT_IMPORT_FILE}"
+      Monitoring__ArchivePlanningEnabled: ${FASTY_ANALYTICS_ARCHIVE_PLANNING_ENABLED:-false}
+      Monitoring__RetentionDays: ${FASTY_ANALYTICS_RETENTION_DAYS:-90}
+      Monitoring__ArchiveDirectory: ${FASTY_ANALYTICS_ARCHIVE_DIRECTORY:-/var/lib/fasty-analytics-archive}
+      ConnectionStrings__FastyDatabase: Host=postgres;Port=5432;Database=fasty;Username=fasty;Password=${FASTY_DB_PASSWORD:?Set a unique FASTY_DB_PASSWORD in .env}
+      Authentication__Tokens__Issuer: "Fasty.Api"
+      Authentication__Tokens__Audience: "Fasty.Client"
+      Authentication__Tokens__SigningKey: ${FASTY_JWT_SIGNING_KEY:?Set a unique FASTY_JWT_SIGNING_KEY in .env}
+      Authentication__Tokens__AccessTokenMinutes: "15"
+      Authentication__Tokens__RefreshTokenDays: "30"
+      Authentication__Google__Enabled: ${FASTY_GOOGLE_ENABLED:-false}
+      Authentication__Google__ClientIds__0: ${FASTY_GOOGLE_SERVER_CLIENT_ID:-}
+      Authentication__Google__ClientIds__1: ${FASTY_GOOGLE_DESKTOP_CLIENT_ID:-}
+      Authentication__Google__DesktopClientId: ${FASTY_GOOGLE_DESKTOP_CLIENT_ID:-}
+      Authentication__Google__DesktopClientSecret: ${FASTY_GOOGLE_DESKTOP_CLIENT_SECRET:-}
+      Authentication__Registration__Enabled: ${FASTY_REGISTRATION_ENABLED:-false}
+      Authentication__Registration__RequireEmailVerification: ${FASTY_REGISTRATION_REQUIRE_EMAIL_VERIFICATION:-true}
+      Authentication__RecoveryAdmin__Enabled: ${FASTY_RECOVERY_ADMIN_ENABLED:-false}
+      Authentication__RecoveryAdmin__Secret: ${FASTY_RECOVERY_ADMIN_SECRET:-}
+      Authentication__RecoveryAdmin__CredentialLifetimeMinutes: ${FASTY_RECOVERY_ADMIN_CREDENTIAL_LIFETIME_MINUTES:-30}
+      ReleaseAnnouncement__Enabled: ${FASTY_RELEASE_ANNOUNCEMENT_ENABLED:-false}
+      ReleaseAnnouncement__Id: ${FASTY_RELEASE_ANNOUNCEMENT_ID:-}
+      ReleaseAnnouncement__Title: ${FASTY_RELEASE_ANNOUNCEMENT_TITLE:-}
+      ReleaseAnnouncement__Message: ${FASTY_RELEASE_ANNOUNCEMENT_MESSAGE:-}
+      ReleaseAnnouncement__ContactUrl: ${FASTY_RELEASE_ANNOUNCEMENT_CONTACT_URL:-}
+      Email__Delivery__Enabled: ${FASTY_EMAIL_DELIVERY_ENABLED:-false}
+      Email__Delivery__Provider: ${FASTY_EMAIL_PROVIDER:-Smtp}
+      Email__Delivery__FromAddress: ${FASTY_EMAIL_FROM_ADDRESS:-noreply@example.com}
+      Email__Delivery__FromName: ${FASTY_EMAIL_FROM_NAME:-Fasty}
+      Email__Delivery__ConfirmationUrl: ${FASTY_EMAIL_CONFIRMATION_URL:-fasty://account/confirm-email}
+      Email__Delivery__PasswordResetUrl: ${FASTY_EMAIL_PASSWORD_RESET_URL:-fasty://account/reset-password}
+      Email__Smtp__Host: ${FASTY_SMTP_HOST:-}
+      Email__Smtp__Port: ${FASTY_SMTP_PORT:-587}
+      Email__Smtp__Username: ${FASTY_SMTP_USERNAME:-}
+      Email__Smtp__Password: ${FASTY_SMTP_PASSWORD:-}
+      Email__Smtp__UseStartTls: ${FASTY_SMTP_USE_STARTTLS:-true}
+      Email__Resend__ApiKey: ${FASTY_RESEND_API_KEY:-}
+    ports:
+      - "${FASTY_API_BIND:-127.0.0.1}:8080:8080"
+      - "${FASTY_MONITORING_BIND:-127.0.0.1}:8081:8081"
+    volumes:
+      - fasty_data_protection_keys:/root/.aspnet/DataProtection-Keys
+      - ${FASTY_DATA_DIR:-./data}:/var/lib/fasty-data:ro
+      - ${FASTY_ANALYTICS_ARCHIVE_DIR:-./data/analytics-archive}:/var/lib/fasty-analytics-archive
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  fasty_postgres_data:
+  fasty_data_protection_keys:
