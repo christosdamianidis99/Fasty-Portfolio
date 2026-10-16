@@ -223,7 +223,9 @@ public static class FastyScreenshotWin32 {
 
     # Stage only images. No source files, local state, identities, credentials,
     # generated platform files or private data are part of this push.
-    Invoke-Checked "Fetch public main branch" { git fetch origin main }
+    Invoke-Checked "Fetch public main branch" {
+        git fetch origin refs/heads/main:refs/remotes/origin/main
+    }
     Invoke-Checked "Create screenshot-only branch from public main" {
         git switch -c $branch origin/main
     }
