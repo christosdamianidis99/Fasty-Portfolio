@@ -214,6 +214,13 @@ public static class FastyScreenshotWin32 {
         exit 0
     }
 
+    # Flutter may regenerate tracked platform files or the dependency lockfile.
+    # This is a disposable dedicated clone, so restore any generated changes
+    # before switching to a screenshot-only branch. Images remain untracked.
+    Invoke-Checked "Restore generated changes in dedicated capture checkout" {
+        git restore -- .
+    }
+
     # Stage only images. No source files, local state, identities, credentials,
     # generated platform files or private data are part of this push.
     Invoke-Checked "Fetch public main branch" { git fetch origin main }
