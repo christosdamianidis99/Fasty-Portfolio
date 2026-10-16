@@ -48,7 +48,7 @@ function Wait-Android {
     $deadline = (Get-Date).AddSeconds($Seconds)
     $lastState = ""
     while ((Get-Date) -lt $deadline) {
-        $listing = @(& $adb devices 2>$null)
+        try { $listing = @(& $adb devices 2>$null) } catch { $listing = @() }
         $connected = @($listing | Where-Object { $_ -match '^\S+\s+device\s*$' })
         $authorized = @($listing | Where-Object { $_ -match '^\S+\s+unauthorized\s*$' })
         if ($connected.Count -eq 1) {
@@ -67,28 +67,44 @@ function Wait-Android {
 }
 function Invoke-Adb {
     param([string]$Label, [string[]]$Arguments)
-    $serial = Wait-Android
-    & $adb -s $serial @Arguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "ADB command failed: $Label"
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        $serial = Wait-Android
+        try {
+            & $adb -s $serial @Arguments 2>$null | Out-Host
+            if ($LASTEXITCODE -eq 0) { return }
+        } catch {
+            Write-Warning "ADB reconnecting during $Label (attempt $attempt)."
+        }
+        Start-Sleep -Seconds 2
     }
+    throw "ADB command failed after retries: $Label"
 }
 function Start-AndCheckDemo {
     param([string]$View)
     for ($attempt = 1; $attempt -le 3; $attempt++) {
         $serial = Wait-Android
         Write-Host "Launching Fasty demo ($View); attempt $attempt"
-        & $adb -s $serial shell am force-stop $package | Out-Null
-        & $adb -s $serial shell am start -n $activity | Out-Host
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warning "ADB disconnected during launch; retrying after reconnect."
+        try {
+            & $adb -s $serial shell am force-stop $package 2>$null | Out-Null
+            & $adb -s $serial shell am start -n $activity 2>$null | Out-Host
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "ADB disconnected during launch; retrying after reconnect."
+                continue
+            }
+        } catch {
+            Write-Warning "USB/ADB temporarily unavailable during app launch."
             continue
         }
         Start-Sleep -Seconds 6
         $serial = Wait-Android
         for ($probe = 0; $probe -lt 10; $probe++) {
-            $window = @(& $adb -s $serial shell dumpsys window 2>$null)
-            $activityState = @(& $adb -s $serial shell dumpsys activity activities 2>$null)
+            try {
+                $window = @(& $adb -s $serial shell dumpsys window 2>$null)
+                $activityState = @(& $adb -s $serial shell dumpsys activity activities 2>$null)
+            } catch {
+                $window = @()
+                $activityState = @()
+            }
             $focused = ($window | Where-Object { $_ -match 'mCurrentFocus=|mFocusedApp=' }) -join ' '
             $resumed = ($activityState | Where-Object { $_ -match 'topResumedActivity|mResumedActivity' }) -join ' '
             if (($focused + $resumed).Contains($package)) {
@@ -108,14 +124,18 @@ function Capture-Android {
     try {
         # If USB drops during capture, retry from the actual app launch.
         for ($attempt = 1; $attempt -le 3; $attempt++) {
-            $serial = Wait-Android
-            & $adb -s $serial shell screencap -p $remote | Out-Null
-            if ($LASTEXITCODE -eq 0) {
-                & $adb -s $serial pull $remote $dest | Out-Host
-                if ($LASTEXITCODE -eq 0 -and (Test-Path $dest) -and (Get-Item $dest).Length -gt 4000) {
-                    Write-Host "Saved $File" -ForegroundColor Green
-                    return
+            try {
+                $serial = Wait-Android
+                & $adb -s $serial shell screencap -p $remote 2>$null | Out-Null
+                if ($LASTEXITCODE -eq 0) {
+                    & $adb -s $serial pull $remote $dest 2>$null | Out-Host
+                    if ($LASTEXITCODE -eq 0 -and (Test-Path $dest) -and (Get-Item $dest).Length -gt 4000) {
+                        Write-Host "Saved $File" -ForegroundColor Green
+                        return
+                    }
                 }
+            } catch {
+                Write-Warning "ADB connection interrupted while capturing $View."
             }
             Write-Warning "USB interruption during capture; relaunching demo."
             $serial = Start-AndCheckDemo -View $View
