@@ -46,14 +46,15 @@ Write-Host "Reusing Windows screenshot: $windowsPng" -ForegroundColor Green
 function Read-WifiEndpoint {
     param([string]$Prompt)
     $endpoint = (Read-Host $Prompt).Trim()
-    if ($endpoint -notmatch '^(?<ip>(?:\d{1,3}\.){3}\d{1,3}):(?<port>\d{2,5})$') {
+    $match = [regex]::Match($endpoint, '^(?<ip>(?:\d{1,3}\.){3}\d{1,3}):(?<port>\d{2,5})$')
+    if (-not $match.Success) {
         throw "Enter private Wi-Fi IPv4 address and port, e.g. 192.168.1.25:37123"
     }
-    $bytes = ([System.Net.IPAddress]::Parse($Matches['ip'])).GetAddressBytes()
+    $bytes = ([System.Net.IPAddress]::Parse($match.Groups['ip'].Value)).GetAddressBytes()
     $privateIp = ($bytes[0] -eq 10) -or
         ($bytes[0] -eq 192 -and $bytes[1] -eq 168) -or
         ($bytes[0] -eq 172 -and $bytes[1] -ge 16 -and $bytes[1] -le 31)
-    $port = [int]$Matches['port']
+    $port = [int]$match.Groups['port'].Value
     if (-not $privateIp -or $port -lt 1 -or $port -gt 65535) {
         throw "Only private Wi-Fi IPv4 addresses and ports 1..65535 are accepted."
     }
